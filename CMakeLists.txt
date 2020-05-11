@@ -6,7 +6,7 @@ find_package(FLTK CONFIG REQUIRED)
 add_library(flmh INTERFACE)
 add_library(flmh::flmh ALIAS flmh)
 
-target_compile_features(flmh PUBLIC cxx_std_17)
+target_compile_features(flmh INTERFACE cxx_std_17)
 
 target_include_directories(
     flmh

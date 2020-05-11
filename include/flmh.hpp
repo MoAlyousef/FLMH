@@ -4,6 +4,7 @@
 #include <FL/Fl_Menu.H>
 #include <FL/Fl_Widget.H>
 #include <type_traits>
+#include <functional>
 
 namespace flmh {
 template <typename Widget,

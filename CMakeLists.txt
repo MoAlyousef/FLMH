@@ -1,10 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
 project(flmh VERSION 0.1.0 LANGUAGES CXX)
 
+find_package(FLTK CONFIG REQUIRED)
+
 add_library(flmh INTERFACE)
 add_library(flmh::flmh ALIAS flmh)
 
-find_package(FLTK CONFIG REQUIRED)
+target_compile_features(flmh PUBLIC cxx_std_17)
 
 target_include_directories(
     flmh

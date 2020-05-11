@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 project(flmh VERSION 0.1.0 LANGUAGES CXX)
 
-find_package(FLTK CONFIG REQUIRED)
-
 add_library(flmh INTERFACE)
 add_library(flmh::flmh ALIAS flmh)
 
@@ -14,8 +12,6 @@ target_include_directories(
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
-
-target_link_libraries(flmh INTERFACE fltk)
 
 # Install
 include(CMakePackageConfigHelpers)

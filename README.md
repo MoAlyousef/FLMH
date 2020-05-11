@@ -25,7 +25,7 @@ int main() {
     return(Fl::run());
 }
 ```
-
+An example for custom handling:
 ```c++
 int main() {
     auto wind = new widget<Fl_Window>(100, 100, 500, 400, "");
@@ -36,6 +36,24 @@ int main() {
         return true;
     });
     return(Fl::run());
+}
+```
+An example using Fl_Menu_Bar:
+```c++
+#include <FL/Fl.H>
+#include <FL/Fl_Menu_Bar.H>
+#include <FL/Fl_Window.H>
+
+#include "flmh.hpp"
+
+using namespace flmh;
+
+int main() {
+  auto wind = new widget<Fl_Window>(100, 100, 500, 400);
+  auto menu = new widget<Fl_Menu_Bar>(0, 0, 500, 40);
+  wind->show();
+  menu->add("File/new", 0, [&]() { wind->label("Hello"); }, 0);
+  return (Fl::run());
 }
 ```
 P.S. You can replace the calls to ```new``` with ```std::make_shared<flmh::widget<WidgetName>>()``` if you prefer, however FLTK manages the lifetimes of its widgets automatically, i.e. the group widget (here the Fl_Window) owns the widget and destroys them when it's destroyed.

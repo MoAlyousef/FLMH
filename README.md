@@ -40,4 +40,4 @@ int main() {
 ```
 
 ## Usage
-You can just include the header file directly to your project.
+You can just include the header file directly to your project. There's also a CMakeLists.txt file for CMake projects.

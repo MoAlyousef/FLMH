@@ -1,7 +1,9 @@
 # FLMH
 FLTK Modern Helper
 
-Just a tiny single-header library which provides a modern C++ interface for FLTK widgets where you can use lambdas for callbacks instead of function pointers. 
+Just a tiny single-header library which provides a modern C++ interface for FLTK widgets where you can use lambdas for callbacks instead of function pointers, and it allows you handle custom events and perform custom drawing without needing to derive/inherit the base class.
+
+## Examples
 
 ```c++
 #include <FL/Fl.H>
@@ -23,9 +25,6 @@ int main() {
     return(Fl::run());
 }
 ```
-You can replace the calls to ```new``` with std::make_shared<flmh::widget<WidgetName>>() if you prefer, however FLTK manages the lifetimes of its widgets automatically, i.e. the group widget (here the Fl_Window) owns the widget and destroys them when it's destroyed.
-    
-FLMH also allows you to handle custom events and perform custom drawing without needing to derive/inherit the base class:
 
 ```c++
 int main() {
@@ -39,6 +38,7 @@ int main() {
     return(Fl::run());
 }
 ```
-
+P.S. You can replace the calls to ```new``` with ```std::make_shared<flmh::widget<WidgetName>>()``` if you prefer, however FLTK manages the lifetimes of its widgets automatically, i.e. the group widget (here the Fl_Window) owns the widget and destroys them when it's destroyed.
+    
 ## Usage
 You can just include the header file directly to your project. There's also a CMakeLists.txt file for CMake projects.

@@ -59,6 +59,6 @@ FetchContent_MakeAvailable(flmh)
 
 add_executable(main main.cpp)
 target_compile_features(main PRIVATE cxx_std_17)
-target_include_directories(main PUBLIC ${flmh_SOURCE_DIR}/include)
+target_include_directories(main PRIVATE ${flmh_SOURCE_DIR}/include)
 target_link_libraries(main PRIVATE fltk fltk_gl fltk_forms fltk_images)
 ```

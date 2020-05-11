@@ -59,7 +59,7 @@ int main() {
 P.S. You can replace the calls to ```new``` with ```std::make_shared<flmh::widget<WidgetName>>()``` if you prefer, however FLTK manages the lifetimes of its widgets automatically, i.e. the group widget (here the Fl_Window) owns the widget and destroys them when it's destroyed.
     
 ## Usage
-You can just include the header file directly to your project. There's also a CMakeLists.txt file for CMake projects. An example CMakeLists.txt file for include flmh:
+You can just include the header file directly to your project. There's also a CMakeLists.txt file for CMake projects. An example CMakeLists.txt file for adding flmh:
 ```cmake
 cmake_minimum_required(VERSION 3.0)
 project(app)

@@ -1,7 +1,7 @@
 # FLMH
 FLTK Modern Helper
 
-Just a tiny single-header library which provides a modern C++ interface for FLTK widgets where you can use lambdas for callbacks. You can just include the header file directly to your project.
+Just a tiny single-header library which provides a modern C++ interface for FLTK widgets where you can use lambdas for callbacks instead of function pointers. You can just include the header file directly to your project.
 
 ```c++
 #include <FL/Fl_Button.H>

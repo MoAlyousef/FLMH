@@ -23,8 +23,9 @@ int main() {
     return(Fl::run());
 }
 ```
-
-It also allows you to handle custom events and perform custom drawing without needing to derive/inherit the base class:
+You can replace the calls to ```new``` with std::make_shared<flmh::widget<WidgetName>>() if you prefer, however FLTK manages the lifetimes of its widgets automatically, i.e. the group widget (here the Fl_Window) owns the widget and destroys them when it's destroyed.
+    
+FLMH also allows you to handle custom events and perform custom drawing without needing to derive/inherit the base class:
 
 ```c++
 int main() {

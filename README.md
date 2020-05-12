@@ -79,7 +79,7 @@ However FLTK manages the lifetimes of its widgets automatically, i.e. the group 
 ## Usage
 You can just include the header file directly to your project. There's also a CMakeLists.txt file for CMake projects. An example CMakeLists.txt file for adding flmh:
 ```cmake
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.14)
 project(app)
 
 find_package(FLTK CONFIG REQUIRED)
@@ -95,6 +95,5 @@ FetchContent_MakeAvailable(flmh)
 
 add_executable(main main.cpp)
 target_compile_features(main PRIVATE cxx_std_17)
-target_include_directories(main PRIVATE ${flmh_SOURCE_DIR}/include)
-target_link_libraries(main PRIVATE fltk fltk_gl fltk_forms fltk_images)
+target_link_libraries(main PRIVATE flmh::flmh fltk fltk_gl fltk_forms fltk_images)
 ```

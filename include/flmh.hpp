@@ -35,15 +35,25 @@ template <typename Widget, typename = typename std::enable_if<
                                std::is_base_of<Fl_Widget, Widget>::value>::type>
 class widget final: public Widget {
   void *ev_data_ = NULL;
+  
   void *draw_data_ = NULL;
+  
   typedef int (*handler)(int, void *data);
+  
   handler inner_handler = NULL;
+  
   typedef void (*drawer)(void *data);
+  
   drawer inner_drawer = NULL;
+  
   void set_handler(handler h) { inner_handler = h; }
+  
   void set_handler_data(void *data) { ev_data_ = data; }
+  
   void set_drawer(drawer h) { inner_drawer = h; }
+  
   void set_drawer_data(void *data) { draw_data_ = data; }
+  
   int handle(int event) override {
     int ret = Widget::handle(event);
     int local = 0;
@@ -57,6 +67,7 @@ class widget final: public Widget {
       return ret;
     }
   }
+  
   void draw() override {
     Widget::draw();
 
@@ -67,9 +78,13 @@ class widget final: public Widget {
 public:
   widget(int x, int y, int w, int h, const char *title = 0)
       : Widget(x, y, w, h, title) {}
-  operator widget *() { return (widget *)*this; }
+      
+  operator Widget *() { return (Widget *)this; }
+  
   widget(const widget &) = delete;
+  
   widget(widget &&) = delete;
+  
   void callback(std::function<void()> &&cb) {
     if (!cb)
       return;
@@ -82,6 +97,7 @@ public:
     auto temp = new std::function<void()>(cb);
     Widget::callback(shim, (void *)temp);
   }
+  
   void handle(std::function<bool(int)> &&cb) {
     if (!cb)
       return;
@@ -95,6 +111,7 @@ public:
     auto temp = new std::function<bool(int)>(cb);
     set_handler_data((void *)temp);
   }
+  
   void draw(std::function<void()> &&cb) {
     if (!cb)
       return;
@@ -108,6 +125,7 @@ public:
     auto temp = new std::function<void()>(cb);
     set_drawer_data((void *)temp);
   }
+  
   void add(const char *name, int shortcut, std::function<void()> &&cb,
            int flag) {
     if constexpr (std::is_base_of_v<Fl_Menu_, Widget>) {
@@ -125,6 +143,7 @@ public:
         return;
     }
   }
+  
   void insert(int index, const char *name, int shortcut,
               std::function<void()> &&cb, int flag) {
     if constexpr (std::is_base_of_v<Fl_Menu_, Widget>) {
@@ -142,6 +161,7 @@ public:
         return;
     }
   }
+  
 };
 } // namespace flmh
 

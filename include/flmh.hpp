@@ -34,104 +34,116 @@ namespace flmh {
 template <typename Widget, typename = typename std::enable_if<
                                std::is_base_of<Fl_Widget, Widget>::value>::type>
 class widget : public Widget {
-    void *ev_data_ = NULL;
-    void *draw_data_ = NULL;
-    typedef int (*handler)(int, void *data);
-    handler inner_handler = NULL;
-    typedef void (*drawer)(void *data);
-    drawer inner_drawer = NULL;
-    void set_handler(handler h) { inner_handler = h; }
-    void set_handler_data(void *data) { ev_data_ = data; }
-    void set_drawer(drawer h) { inner_drawer = h; }
-    void set_drawer_data(void *data) { draw_data_ = data; }
-    int handle(int event) override {
-        int ret = Widget::handle(event);
-        int local = 0;
-        if (ev_data_ && inner_handler) {
-            local = inner_handler(event, ev_data_);
-            if (local == 0)
-                return ret;
-            else
-                return local;
-        } else {
-            return ret;
-        }
+  void *ev_data_ = NULL;
+  void *draw_data_ = NULL;
+  typedef int (*handler)(int, void *data);
+  handler inner_handler = NULL;
+  typedef void (*drawer)(void *data);
+  drawer inner_drawer = NULL;
+  void set_handler(handler h) { inner_handler = h; }
+  void set_handler_data(void *data) { ev_data_ = data; }
+  void set_drawer(drawer h) { inner_drawer = h; }
+  void set_drawer_data(void *data) { draw_data_ = data; }
+  int handle(int event) override {
+    int ret = Widget::handle(event);
+    int local = 0;
+    if (ev_data_ && inner_handler) {
+      local = inner_handler(event, ev_data_);
+      if (local == 0)
+        return ret;
+      else
+        return local;
+    } else {
+      return ret;
     }
-    void draw() override {
-        Widget::draw();
+  }
+  void draw() override {
+    Widget::draw();
 
-        if (draw_data_ && inner_drawer)
-            inner_drawer(draw_data_);
-    }
+    if (draw_data_ && inner_drawer)
+      inner_drawer(draw_data_);
+  }
 
-  public:
-    widget(int x, int y, int w, int h, const char *title = 0)
-        : Widget(x, y, w, h, title) {}
-    operator widget *() { return (widget *)*this; }
-    void callback(std::function<void()> cb) {
-        if (!cb)
-            return;
-        auto shim = [](Fl_Widget *, void *data) {
-            if (!data)
-                return;
-            auto d = (std::function<void()> *)data;
-            (*d)();
-        };
-        Widget::callback(shim, (void *)&cb);
+public:
+  widget(int x, int y, int w, int h, const char *title = 0)
+      : Widget(x, y, w, h, title) {}
+  operator widget *() { return (widget *)*this; }
+  widget(const widget &) = delete;
+  widget(widget &&) = delete;
+  void callback(std::function<void()> &&cb) {
+    if (!cb)
+      return;
+    auto shim = [](Fl_Widget *, void *data) {
+      if (!data)
+        return;
+      auto d = (std::function<void()> *)data;
+      (*d)();
+    };
+    auto temp = new std::function<void()>(cb);
+    Widget::callback(shim, (void *)temp);
+  }
+  void handle(std::function<bool(int)> &&cb) {
+    if (!cb)
+      return;
+    auto shim = [](int _ev, void *data) -> int {
+      if (!data)
+        return 0;
+      auto d = (std::function<bool(int)> *)data;
+      return (*d)(_ev);
+    };
+    set_handler(shim);
+    auto temp = new std::function<bool(int)>(cb);
+    set_handler_data((void *)temp);
+  }
+  void draw(std::function<void()> &&cb) {
+    if (!cb)
+      return;
+    auto shim = [](void *data) {
+      if (!data)
+        return 0;
+      auto d = (std::function<void()> *)data;
+      (*d)();
+    };
+    set_drawer(shim);
+    auto temp = new std::function<void()>(cb);
+    set_drawer_data((void *)temp);
+  }
+  void add(const char *name, int shortcut, std::function<void()> &&cb,
+           int flag) {
+    if constexpr (std::is_base_of_v<Fl_Menu_, Widget>) {
+      if (!cb)
+        return;
+      auto shim = [](Fl_Widget *, void *data) {
+        if (!data)
+          return;
+        auto d = (std::function<void()> *)data;
+        (*d)();
+      };
+      auto temp = new std::function<void()>(cb);
+      Widget::add(name, shortcut, shim, (void *)temp, flag);
+    } else {
+        return;
     }
-    void handle(std::function<bool(int)> cb) {
-        if (!cb)
-            return;
-        auto shim = [](int _ev, void *data) -> int {
-            if (!data)
-                return 0;
-            auto d = (std::function<bool(int)> *)data;
-            return (*d)(_ev);
-        };
-        set_handler(shim);
-        set_handler_data((void *)&cb);
+  }
+  void insert(int index, const char *name, int shortcut,
+              std::function<void()> &&cb, int flag) {
+    if constexpr (std::is_base_of_v<Fl_Menu_, Widget>) {
+      if (!cb)
+        return;
+      auto shim = [](Fl_Widget *, void *data) {
+        if (!data)
+          return;
+        auto d = (std::function<void()> *)data;
+        (*d)();
+      };
+      auto temp = new std::function<void()>(cb);
+      Widget::insert(index, name, shortcut, shim, (void *)temp, flag);
+    } else {
+        return;
     }
-    void draw(std::function<void()> cb) {
-        if (!cb)
-            return;
-        auto shim = [](void *data) {
-            if (!data)
-                return 0;
-            auto d = (std::function<void()> *)data;
-            (*d)();
-        };
-        set_drawer(shim);
-        set_drawer_data((void *)&cb);
-    }
-    void add(const char *name, int shortcut, std::function<void()> cb,
-             int flag) {
-        if constexpr (std::is_base_of_v<Fl_Menu_, Widget>) {
-            if (!cb)
-                return;
-            auto shim = [](Fl_Widget *, void *data) {
-                if (!data)
-                    return;
-                auto d = (std::function<void()> *)data;
-                (*d)();
-            };
-            Widget::add(name, shortcut, shim, (void *)&cb, flag);
-        }
-    }
-    void insert(int index, const char *name, int shortcut,
-                std::function<void()> cb, int flag) {
-        if constexpr (std::is_base_of_v<Fl_Menu_, Widget>) {
-            if (!cb)
-                return;
-            auto shim = [](Fl_Widget *, void *data) {
-                if (!data)
-                    return;
-                auto d = (std::function<void()> *)data;
-                (*d)();
-            };
-            Widget::insert(index, name, shortcut, shim, (void *)&cb, flag);
-        }
-    }
+  }
 };
 } // namespace flmh
 
 #endif
+

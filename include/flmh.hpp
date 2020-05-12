@@ -33,7 +33,7 @@
 namespace flmh {
 template <typename Widget, typename = typename std::enable_if<
                                std::is_base_of<Fl_Widget, Widget>::value>::type>
-class widget : public Widget {
+class widget final: public Widget {
   void *ev_data_ = NULL;
   void *draw_data_ = NULL;
   typedef int (*handler)(int, void *data);

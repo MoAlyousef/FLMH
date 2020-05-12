@@ -56,7 +56,25 @@ int main() {
   return (Fl::run());
 }
 ```
-P.S. You can replace the calls to ```new``` with ```std::make_shared<flmh::widget<WidgetName>>()``` if you prefer, however FLTK manages the lifetimes of its widgets automatically, i.e. the group widget (here the Fl_Window) owns the widget and destroys them when it's destroyed.
+P.S. You can replace the calls to ```new``` with ```std::make_shared<flmh::widget<WidgetName>>()``` if you prefer:
+```c++
+auto main() -> int {
+  auto wind = make_shared<widget<Fl_Window>>(100, 100, 500, 400, "");
+  auto but = make_shared<widget<Fl_Button>>(210, 340, 80, 40, "Click");
+  auto frame = make_shared<widget<Fl_Box>>(0, 0, 500, 400, "");
+  wind->show();
+  Fl::lock();
+  int i = 1;
+  but->callback([&]() { Fl::awake(&i); });
+  while (Fl::wait()) {
+    auto msg = Fl::thread_message();
+    if (msg) {
+      frame->label(std::to_string(*(int *)msg).c_str());
+    }
+  }
+}
+```
+However FLTK manages the lifetimes of its widgets automatically, i.e. the group widget (here the Fl_Window) owns the widget and destroys them when it's destroyed.
     
 ## Usage
 You can just include the header file directly to your project. There's also a CMakeLists.txt file for CMake projects. An example CMakeLists.txt file for adding flmh:

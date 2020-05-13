@@ -53,13 +53,13 @@ class widget final : public Widget {
 
   std::function<void()> *drawer_handle_ = nullptr;
 
-  void set_handler(handler h) { inner_handler_ = h; }
+  void set_handler_(handler h) { inner_handler_ = h; }
 
-  void set_handler_data(void *data) { ev_data_ = data; }
+  void set_handler_data_(void *data) { ev_data_ = data; }
 
-  void set_drawer(drawer h) { inner_drawer_ = h; }
+  void set_drawer_(drawer h) { inner_drawer_ = h; }
 
-  void set_drawer_data(void *data) { draw_data_ = data; }
+  void set_drawer_data_(void *data) { draw_data_ = data; }
 
   int handle(int event) override {
     int ret = Widget::handle(event);
@@ -120,9 +120,9 @@ public:
       auto d = (std::function<bool(int)> *)data;
       return (*d)(_ev);
     };
-    set_handler(shim);
+    set_handler_(shim);
     handler_handle_ = new std::function<bool(int)>(cb);
-    set_handler_data((void *)handler_handle_);
+    set_handler_data_((void *)handler_handle_);
   }
 
   void draw(std::function<void()> &&cb) {
@@ -134,9 +134,9 @@ public:
       auto d = (std::function<void()> *)data;
       (*d)();
     };
-    set_drawer(shim);
+    set_drawer_(shim);
     drawer_handle_ = new std::function<void()>(cb);
-    set_drawer_data((void *)drawer_handle_);
+    set_drawer_data_((void *)drawer_handle_);
   }
 
   void add(const char *name, int shortcut, std::function<void()> &&cb,

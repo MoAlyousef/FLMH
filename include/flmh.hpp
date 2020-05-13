@@ -35,9 +35,9 @@ template <typename Widget, typename = typename std::enable_if<
                                std::is_base_of<Fl_Widget, Widget>::value>::type>
 class widget final : public Widget {
 
-  using handler = int (*)(int, void *data);
+  using handler = int (*)(int, void *);
 
-  using drawer = void (*)(void *data);
+  using drawer = void (*)(void *);
 
   handler inner_handler_ = nullptr;
 

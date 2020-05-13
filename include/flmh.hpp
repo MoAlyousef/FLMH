@@ -33,8 +33,7 @@
 namespace flmh {
 
 template <typename Widget,
-          typename =
-              typename std::enable_if_t<std::is_base_of_v<Fl_Widget, Widget>>>
+          typename = std::enable_if_t<std::is_base_of_v<Fl_Widget, Widget>>>
 class widget final : public Widget {
 
   using handler = int (*)(int, void *);

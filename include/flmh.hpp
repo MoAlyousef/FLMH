@@ -31,6 +31,7 @@
 #include <type_traits>
 
 namespace flmh {
+
 template <typename Widget, typename = typename std::enable_if<
                                std::is_base_of<Fl_Widget, Widget>::value>::type>
 class widget final : public Widget {
@@ -175,6 +176,7 @@ public:
     }
   }
 };
+
 } // namespace flmh
 
 #endif

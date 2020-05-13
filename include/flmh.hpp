@@ -150,7 +150,7 @@ public:
         auto d = (std::function<void()> *)data;
         (*d)();
       };
-      auto temp = new std::function<void()>(cb);
+      auto temp = new std::function<void()>(cb); // currently leaks
       Widget::add(name, shortcut, shim, (void *)temp, flag);
     } else {
       return;
@@ -168,7 +168,7 @@ public:
         auto d = (std::function<void()> *)data;
         (*d)();
       };
-      auto temp = new std::function<void()>(cb);
+      auto temp = new std::function<void()>(cb); // currently leaks
       Widget::insert(index, name, shortcut, shim, (void *)temp, flag);
     } else {
       return;
@@ -178,4 +178,3 @@ public:
 } // namespace flmh
 
 #endif
-

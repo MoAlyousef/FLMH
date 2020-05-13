@@ -32,8 +32,9 @@
 
 namespace flmh {
 
-template <typename Widget, typename = typename std::enable_if<
-                               std::is_base_of<Fl_Widget, Widget>::value>::type>
+template <typename Widget,
+          typename =
+              typename std::enable_if_t<std::is_base_of_v<Fl_Widget, Widget>>>
 class widget final : public Widget {
 
   using handler = int (*)(int, void *);
@@ -78,7 +79,6 @@ class widget final : public Widget {
 
   void draw() override {
     Widget::draw();
-
     if (draw_data_ && inner_drawer_)
       inner_drawer_(draw_data_);
   }

@@ -69,7 +69,7 @@ auto main() -> int {
   while (Fl::wait()) {
     auto msg = Fl::thread_message();
     if (msg) {
-      frame->label(std::to_string(*(int *)msg).c_str());
+      frame->label(std::to_string(*static_cast<int *>(msg)).c_str());
     }
   }
 }

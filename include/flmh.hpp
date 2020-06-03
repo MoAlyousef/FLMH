@@ -180,12 +180,6 @@ public:
   }
 };
 
-template<typename Widget>
-std::shared_ptr<widget<Widget>> make_widget(int x, int y, int w, int h,
-                                    const char *title = 0) {
-  return std::make_shared<widget<Widget>>(x, y, w, h, title);
-}
-
 } // namespace flmh
 
 #endif

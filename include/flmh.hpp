@@ -28,6 +28,7 @@
 #include <FL/Fl_Menu.H>
 #include <FL/Fl_Widget.H>
 #include <functional>
+#include <memory>
 #include <type_traits>
 
 namespace flmh {
@@ -48,11 +49,11 @@ class widget final : public Widget {
 
   void *draw_data_ = nullptr;
 
-  std::function<void()> *callback_handle_ = nullptr;
+  std::unique_ptr<std::function<void()>> callback_handle_ = nullptr;
 
-  std::function<bool(int)> *handler_handle_ = nullptr;
+  std::unique_ptr<std::function<bool(int)>> handler_handle_ = nullptr;
 
-  std::function<void()> *drawer_handle_ = nullptr;
+  std::unique_ptr<std::function<void()>> drawer_handle_ = nullptr;
 
   void set_handler_(handler h) { inner_handler_ = h; }
 
@@ -86,17 +87,20 @@ public:
   widget(int x, int y, int w, int h, const char *title = 0)
       : Widget(x, y, w, h, title) {}
 
-  operator Widget *() { return (Widget *)this; }
-
   widget(const widget &) = delete;
 
   widget(widget &&) = delete;
 
   ~widget() {
-    delete callback_handle_;
-    delete handler_handle_;
-    delete drawer_handle_;
+    if constexpr (std::is_base_of_v<Fl_Menu_, Widget>) {
+      for (size_t i = 0; i < Widget::size(); ++i) {
+        delete static_cast<std::function<void()> *>(Widget::user_data());
+        Widget::user_data(nullptr);
+      }
+    }
   }
+
+  operator Widget *() { return (Widget *)this; }
 
   void callback(std::function<void()> &&cb) {
     if (!cb)
@@ -104,11 +108,11 @@ public:
     auto shim = [](Fl_Widget *, void *data) {
       if (!data)
         return;
-      auto d = (std::function<void()> *)data;
+      auto d = static_cast<std::function<void()> *>(data);
       (*d)();
     };
-    callback_handle_ = new std::function<void()>(cb);
-    Widget::callback(shim, (void *)callback_handle_);
+    callback_handle_ = std::make_unique<std::function<void()>>(cb);
+    Widget::callback(shim, static_cast<void *>(callback_handle_.get()));
   }
 
   void handle(std::function<bool(int)> &&cb) {
@@ -117,12 +121,12 @@ public:
     auto shim = [](int _ev, void *data) -> int {
       if (!data)
         return 0;
-      auto d = (std::function<bool(int)> *)data;
+      auto d = static_cast<std::function<bool(int)> *>(data);
       return (*d)(_ev);
     };
     set_handler_(shim);
-    handler_handle_ = new std::function<bool(int)>(cb);
-    set_handler_data_((void *)handler_handle_);
+    handler_handle_ = std::make_unique<std::function<bool(int)>>(cb);
+    set_handler_data_(static_cast<void *>(handler_handle_.get()));
   }
 
   void draw(std::function<void()> &&cb) {
@@ -131,12 +135,12 @@ public:
     auto shim = [](void *data) {
       if (!data)
         return 0;
-      auto d = (std::function<void()> *)data;
+      auto d = static_cast<std::function<void()> *>(data);
       (*d)();
     };
     set_drawer_(shim);
-    drawer_handle_ = new std::function<void()>(cb);
-    set_drawer_data_((void *)drawer_handle_);
+    drawer_handle_ = std::make_unique<std::function<void()>>(cb);
+    set_drawer_data_(static_cast<void *>(drawer_handle_.get()));
   }
 
   void add(const char *name, int shortcut, std::function<void()> &&cb,
@@ -147,11 +151,11 @@ public:
       auto shim = [](Fl_Widget *, void *data) {
         if (!data)
           return;
-        auto d = (std::function<void()> *)data;
+        auto d = static_cast<std::function<void()> *>(data);
         (*d)();
       };
       auto temp = new std::function<void()>(cb); // currently leaks
-      Widget::add(name, shortcut, shim, (void *)temp, flag);
+      Widget::add(name, shortcut, shim, static_cast<void *>(temp), flag);
     } else {
       return;
     }
@@ -165,16 +169,22 @@ public:
       auto shim = [](Fl_Widget *, void *data) {
         if (!data)
           return;
-        auto d = (std::function<void()> *)data;
+        auto d = static_cast<std::function<void()> *>(data);
         (*d)();
       };
       auto temp = new std::function<void()>(cb); // currently leaks
-      Widget::insert(index, name, shortcut, shim, (void *)temp, flag);
+      Widget::insert(index, name, shortcut, shim, static_cast<void *>(temp), flag);
     } else {
       return;
     }
   }
 };
+
+template<typename Widget>
+std::shared_ptr<widget<Widget>> make_widget(int x, int y, int w, int h,
+                                    const char *title = 0) {
+  return std::make_shared<widget<Widget>>(x, y, w, h, title);
+}
 
 } // namespace flmh
 

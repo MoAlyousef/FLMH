@@ -17,9 +17,9 @@ Just a tiny single-header library which provides a modern C++ interface for FLTK
 using namespace flmh;
 
 int main() {
-    auto wind = new widget<Fl_Window>(100, 100, 500, 400, "");
-    auto but = new widget<Fl_Button>(210, 340, 80, 40, "Click");
-    auto frame = new widget<Fl_Box>(0, 0, 500, 400, "");
+    auto wind = make_widget<Fl_Window>(100, 100, 500, 400, "");
+    auto but = make_widget<Fl_Button>(210, 340, 80, 40, "Click");
+    auto frame = make_widget<Fl_Box>(0, 0, 500, 400, "");
     wind->show();
     but->callback([&]() { frame->label("Works!"); });
     return(Fl::run());
@@ -28,8 +28,8 @@ int main() {
 An example for custom handling:
 ```c++
 int main() {
-    auto wind = new widget<Fl_Window>(100, 100, 500, 400, "");
-    auto frame = new widget<Fl_Box>(0, 0, 500, 400, "");
+    auto wind = make_widget<Fl_Window>(100, 100, 500, 400, "");
+    auto frame = make_widget<Fl_Box>(0, 0, 500, 400, "");
     wind->show();
     wind->handle([&](int event) -> bool {
         frame->label(fl_eventnames[event]);
@@ -49,19 +49,19 @@ An example using Fl_Menu_Bar:
 using namespace flmh;
 
 int main() {
-  auto wind = new widget<Fl_Window>(100, 100, 500, 400);
-  auto menu = new widget<Fl_Menu_Bar>(0, 0, 500, 40);
+  auto wind = make_widget<Fl_Window>(100, 100, 500, 400);
+  auto menu = make_widget<Fl_Menu_Bar>(0, 0, 500, 40);
   wind->show();
   menu->add("File/new", 0, [&]() { wind->label("Hello"); }, 0);
   return (Fl::run());
 }
 ```
-P.S. You can replace the calls to ```new``` with ```std::make_shared<flmh::widget<WidgetName>>()``` if you prefer:
+
 ```c++
 auto main() -> int {
-  auto wind = make_shared<widget<Fl_Window>>(100, 100, 500, 400, "");
-  auto but = make_shared<widget<Fl_Button>>(210, 340, 80, 40, "Click");
-  auto frame = make_shared<widget<Fl_Box>>(0, 0, 500, 400, "");
+  auto wind = make_widget<Fl_Window>(100, 100, 500, 400, "");
+  auto but = make_widget<Fl_Button>(210, 340, 80, 40, "Click");
+  auto frame = make_widget<Fl_Box>(0, 0, 500, 400, "");
   wind->show();
   Fl::lock();
   int i = 1;

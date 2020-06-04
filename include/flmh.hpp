@@ -36,6 +36,30 @@
 
 namespace flmh {
 
+template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
+struct Sender {
+    void emit(T &&t) const {
+        Fl::awake(static_cast<void *>(&t));
+    }
+};
+
+template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
+struct Receiver {
+    std::optional<T> recv() const {
+        auto msg = Fl::thread_message();
+        if (!msg)
+            return std::nullopt;
+        return *static_cast<T *>(msg);
+    }
+};
+
+template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
+auto channel() -> std::pair<Sender<T>, Receiver<T>> {
+    Sender<T> s;
+    Receiver<T> r;
+    return std::make_pair(s, r);
+}
+
 template <typename Widget, typename = std::enable_if_t<std::is_base_of_v<Fl_Widget, Widget>>>
 class widget final : public Widget {
 
@@ -127,6 +151,11 @@ class widget final : public Widget {
         Widget::callback(shim, static_cast<void *>(callback_handle_.get()));
     }
 
+    template <typename Message, typename = std::enable_if_t<std::is_pod_v<Message>>>
+    void emit(const Sender<Message> &s, Message &&m) {
+        callback([&] { s.emit(std::forward<Message>(m)); });
+    }
+
     void handle(std::function<bool(int)> &&cb) {
         if (!cb)
             return;
@@ -189,30 +218,6 @@ class widget final : public Widget {
         }
     }
 };
-
-template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
-struct Sender {
-    void emit(T &&t) const {
-        Fl::awake(static_cast<void *>(&t));
-    }
-};
-
-template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
-struct Receiver {
-    std::optional<T> recv() const {
-        auto msg = Fl::thread_message();
-        if (!msg)
-            return std::nullopt;
-        return *static_cast<T *>(msg);
-    }
-};
-
-template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
-auto channel() -> std::pair<Sender<T>, Receiver<T>> {
-    Sender<T> s;
-    Receiver<T> r;
-    return std::make_pair(s, r);
-}
 
 } // namespace flmh
 

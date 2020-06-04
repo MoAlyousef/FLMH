@@ -22,7 +22,7 @@ int main() {
     auto frame = new widget<Fl_Box>(0, 0, 500, 400, "");
     wind->show();
     but->callback([&]() { frame->label("Works!"); });
-    return(Fl::run());
+    return (Fl::run());
 }
 ```
 Note that FLTK manages the lifetimes of its widgets automatically, i.e. the Fl_Group inheriting widgets (here the Fl_Window) owns the widget and destroys them when it's destroyed.
@@ -37,12 +37,13 @@ int main() {
         frame->label(fl_eventnames[event]);
         return true;
     });
-    return(Fl::run());
+    return (Fl::run());
 }
 ```
-An example using Fl_Menu_Bar:
+An example using Fl_Menu_Bar and messaging:
 ```c++
 #include <FL/Fl.H>
+#include <FL/Fl_Box.H>
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Window.H>
 
@@ -50,30 +51,43 @@ An example using Fl_Menu_Bar:
 
 using namespace flmh;
 
-int main() {
-  auto wind = new widget<Fl_Window>(100, 100, 500, 400);
-  auto menu = new widget<Fl_Menu_Bar>(0, 0, 500, 40);
-  wind->show();
-  menu->add("File/new", 0, [&]() { wind->label("Hello"); }, 0);
-  return (Fl::run());
-}
-```
-Using messaging:
-```c++
+enum class Message {
+    New = 0,
+    Open,
+    Quit,
+};
+
 auto main() -> int {
-  auto wind = new widget<Fl_Window>(100, 100, 500, 400, "");
-  auto but = new widget<Fl_Button>(210, 340, 80, 40, "Click");
-  auto frame = new widget<Fl_Box>(0, 0, 500, 400, "");
-  wind->show();
-  Fl::lock();
-  int i = 1;
-  but->callback([&]() { Fl::awake(&i); });
-  while (Fl::wait()) {
-    auto msg = Fl::thread_message();
-    if (msg) {
-      frame->label(std::to_string(*static_cast<int *>(msg)).c_str());
+    auto wind = new widget<Fl_Window>(100, 100, 500, 400);
+    auto menu = new widget<Fl_Menu_Bar>(0, 0, 500, 40);
+    auto frame = new widget<Fl_Box>(0, 0, 500, 400);
+    wind->end();
+    wind->show();
+
+    auto [s, r] = channel<Message>();
+    menu->add("File/New", 0, [&]() { s.emit(Message::New); }, 0);
+    menu->add("File/Open", 0, [&]() { s.emit(Message::Open); }, 0);
+    menu->add("File/Quit", 0, [&]() { s.emit(Message::Quit); }, 0);
+
+    Fl::lock();
+    while (Fl::wait()) {
+        auto msg = r.recv(); // returns a std::optional<T>
+        if (msg) {
+            switch (static_cast<int>(msg.value())) {
+            case 0:
+                frame->label("New");
+                break;
+            case 1:
+                frame->label("Open");
+                break;
+            case 2:
+                wind->hide();
+                break;
+            default:
+                break;
+            }
+        }
     }
-  }
 }
 ```
     

@@ -17,9 +17,9 @@ Just a tiny single-header library which provides a modern C++ interface for FLTK
 using namespace flmh;
 
 int main() {
-    auto wind = new widget<Fl_Window>(100, 100, 500, 400, "");
+    auto wind = new widget<Fl_Window>(100, 100, 500, 400);
     auto but = new widget<Fl_Button>(210, 340, 80, 40, "Click");
-    auto frame = new widget<Fl_Box>(0, 0, 500, 400, "");
+    auto frame = new widget<Fl_Box>(0, 0, 500, 400);
     wind->show();
     but->callback([&]() { frame->label("Works!"); });
     return (Fl::run());
@@ -30,8 +30,8 @@ Note that FLTK manages the lifetimes of its widgets automatically, i.e. the Fl_G
 An example for custom handling:
 ```c++
 int main() {
-    auto wind = new widget<Fl_Window>(100, 100, 500, 400, "");
-    auto frame = new widget<Fl_Box>(0, 0, 500, 400, "");
+    auto wind = new widget<Fl_Window>(100, 100, 500, 400);
+    auto frame = new widget<Fl_Box>(0, 0, 500, 400);
     wind->show();
     wind->handle([&](int event) -> bool {
         frame->label(fl_eventnames[event]);

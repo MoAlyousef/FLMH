@@ -192,8 +192,8 @@ class widget final : public Widget {
 
 template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
 struct Sender {
-    void emit(const T &t) const {
-        Fl::awake((void *)&t);
+    void emit(T &&t) const {
+        Fl::awake(static_cast<void *>(&t));
     }
 };
 

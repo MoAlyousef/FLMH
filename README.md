@@ -64,10 +64,14 @@ auto main() -> int {
     wind->end();
     wind->show();
 
+    // Channels accept POD types
     auto [s, r] = channel<Message>();
-    menu->add("File/New", 0, [&]() { s.emit(Message::New); }, 0);
-    menu->add("File/Open", 0, [&]() { s.emit(Message::Open); }, 0);
-    menu->add("File/Quit", 0, [&]() { s.emit(Message::Quit); }, 0);
+    
+    // [&] works fine on GCC and MSVC, only clang fails to compile
+    // stdlib issue 2313 https://wg21.link/CWG2313
+    menu->add("File/New", 0, [s = s]() { s.emit(Message::New); }, 0); 
+    menu->add("File/Open", 0, [s = s]() { s.emit(Message::Open); }, 0);
+    menu->add("File/Quit", 0, [s = s]() { s.emit(Message::Quit); }, 0);
 
     Fl::lock();
     while (Fl::wait()) {

@@ -103,7 +103,7 @@ class widget final : public Widget {
 
     ~widget() {
         if constexpr (std::is_base_of_v<Fl_Menu_, Widget>) {
-            for (size_t i = 0; i < Widget::size(); ++i) {
+            for (int i = 0; i < Widget::size(); ++i) { // size() returns an int
                 delete static_cast<std::function<void()> *>(Widget::user_data());
                 Widget::user_data(nullptr);
             }

@@ -38,8 +38,9 @@ namespace flmh {
 
 template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
 struct Sender {
-    void emit(T &&t) const {
-        Fl::awake(static_cast<void *>(&t));
+    void emit(const T &t) const {
+        auto temp = static_cast<const void *>(&t);
+        Fl::awake(const_cast<void *>(temp));
     }
 };
 
@@ -152,8 +153,8 @@ class widget final : public Widget {
     }
 
     template <typename Message, typename = std::enable_if_t<std::is_pod_v<Message>>>
-    void emit(const Sender<Message> &s, Message &&m) {
-        callback([&] { s.emit(std::forward<Message>(m)); });
+    void emit(const Sender<Message> &s, const Message &m) {
+        callback([&] { s.emit(m); });
     }
 
     void handle(std::function<bool(int)> &&cb) {

@@ -67,8 +67,7 @@ auto main() -> int {
     // Channels accept POD types
     auto [s, r] = channel<Message>();
     
-    // [&] works fine on GCC and MSVC, only clang fails to compile
-    // stdlib issue 2313 https://wg21.link/CWG2313
+    // [&] works fine on GCC and MSVC, Clang fails to compile awaiting support for extended structured bindings
     menu->add("File/New", 0, [s = s]() { s.emit(Message::New); }, 0); 
     menu->add("File/Open", 0, [s = s]() { s.emit(Message::Open); }, 0);
     menu->add("File/Quit", 0, [s = s]() { s.emit(Message::Quit); }, 0);

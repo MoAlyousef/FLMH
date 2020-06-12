@@ -39,8 +39,8 @@ namespace flmh {
 template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
 struct Sender {
     void emit(const T &t) const {
-        auto temp = static_cast<const void *>(&t);
-        Fl::awake(const_cast<void *>(temp));
+        auto *temp = new T(t);
+        Fl::awake(temp);
     }
 };
 
@@ -50,7 +50,9 @@ struct Receiver {
         auto msg = Fl::thread_message();
         if (!msg)
             return std::nullopt;
-        return *static_cast<T *>(msg);
+        auto val = *static_cast<T *>(msg);
+        delete static_cast<T *>(msg);
+        return val;
     }
 };
 

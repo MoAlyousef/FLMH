@@ -197,7 +197,7 @@ class widget final : public Widget {
                 auto d = static_cast<std::function<void()> *>(data);
                 (*d)();
             };
-            auto temp = new std::function<void()>(cb); // currently leaks
+            auto temp = new std::function<void()>(cb);
             Widget::add(name, shortcut, shim, static_cast<void *>(temp), flag);
         } else {
             return;
@@ -214,7 +214,7 @@ class widget final : public Widget {
                 auto d = static_cast<std::function<void()> *>(data);
                 (*d)();
             };
-            auto temp = new std::function<void()>(cb); // currently leaks
+            auto temp = new std::function<void()>(cb);
             Widget::insert(index, name, shortcut, shim, static_cast<void *>(temp), flag);
         } else {
             return;

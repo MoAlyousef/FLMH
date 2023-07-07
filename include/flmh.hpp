@@ -26,26 +26,27 @@
 #define __FLTK_MODERN_HELPER__
 
 #include <FL/Fl.H>
-#include <FL/Fl_Menu.H>
 #include <FL/Fl_Widget.H>
 #include <functional>
-#include <memory>
 #include <optional>
 #include <type_traits>
 #include <utility>
+#include <cassert>
 
 namespace flmh {
 
-template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
+template <typename T>
 struct Sender {
+    static_assert(std::is_standard_layout_v<T> && std::is_trivial_v<T>);
     void emit(const T &t) const {
         auto *temp = new T(t);
         Fl::awake(temp);
     }
 };
 
-template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
+template <typename T>
 struct Receiver {
+    static_assert(std::is_standard_layout_v<T> && std::is_trivial_v<T>);
     std::optional<T> recv() const {
         auto msg = Fl::thread_message();
         if (!msg)
@@ -56,102 +57,76 @@ struct Receiver {
     }
 };
 
-template <typename T, typename = std::enable_if_t<std::is_pod_v<T>>>
+template <typename T>
 auto channel() -> std::pair<Sender<T>, Receiver<T>> {
+    static_assert(std::is_standard_layout_v<T> && std::is_trivial_v<T>);
     Sender<T> s;
     Receiver<T> r;
     return std::make_pair(s, r);
 }
 
-template <typename Widget, typename = std::enable_if_t<std::is_base_of_v<Fl_Widget, Widget>>>
-class widget final : public Widget {
+template <typename W>
+class Widget final : public W {
+    static_assert(std::is_same_v<W, Fl_Widget>  ||  std::is_base_of_v<Fl_Widget, W>);
 
-    using handler = int (*)(int, void *);
+    std::function<void(Widget *)> callback_fn_ = nullptr;
 
-    using drawer = void (*)(void *);
+    std::function<bool(Widget *, int)> handler_fn_ = nullptr;
 
-    handler inner_handler_ = nullptr;
-
-    drawer inner_drawer_ = nullptr;
-
-    void *ev_data_ = nullptr;
-
-    void *draw_data_ = nullptr;
-
-    std::unique_ptr<std::function<void()>> callback_handle_ = nullptr;
-
-    std::unique_ptr<std::function<bool(int)>> handler_handle_ = nullptr;
-
-    std::unique_ptr<std::function<void()>> drawer_handle_ = nullptr;
-
-    void set_handler_(handler h) {
-        inner_handler_ = h;
-    }
-
-    void set_handler_data_(void *data) {
-        ev_data_ = data;
-    }
-
-    void set_drawer_(drawer h) {
-        inner_drawer_ = h;
-    }
-
-    void set_drawer_data_(void *data) {
-        draw_data_ = data;
-    }
+    std::function<void(Widget *)> drawer_fn_ = nullptr;
 
     int handle(int event) override {
-        int ret = Widget::handle(event);
         int local = 0;
-        if (ev_data_ && inner_handler_) {
-            local = inner_handler_(event, ev_data_);
+        if (handler_fn_) {
+            local = handler_fn_(this, event);
             if (local == 0)
-                return ret;
+                return W::handle(event);
             else
-                return local;
+                return W::handle(event) | local;
         } else {
-            return ret;
+            return W::handle(event);
         }
     }
 
     void draw() override {
-        Widget::draw();
-        if (draw_data_ && inner_drawer_)
-            inner_drawer_(draw_data_);
+        W::draw();
+        if (drawer_fn_)
+            drawer_fn_(this);
     }
 
   public:
-    widget(int x, int y, int w, int h, const char *title = 0) : Widget(x, y, w, h, title) {
+    Widget(int x, int y, int w, int h, const char *title = 0) : W(x, y, w, h, title) {
     }
-
-    widget(const widget &) = delete;
-
-    widget(widget &&) = delete;
-
-    ~widget() {
-        if constexpr (std::is_base_of_v<Fl_Menu_, Widget>) {
-            for (int i = 0; i < Widget::size(); ++i) { // size() returns an int
-                delete static_cast<std::function<void()> *>(Widget::user_data());
-                Widget::user_data(nullptr);
-            }
+    Widget(int w, int h, const char *title = 0) : W(0, 0, w, h, title) {
+        if constexpr (std::is_same_v<W, Fl_Window> || std::is_base_of_v<Fl_Window, W>) {
+            this->free_position();
+        }
+    }
+    Widget(const char *title = 0) : W(0, 0, 0, 0, title) {
+        if constexpr (std::is_same_v<W, Fl_Window> || std::is_base_of_v<Fl_Window, W>) {
+            this->free_position();
         }
     }
 
-    operator Widget *() {
-        return (Widget *)this;
+    Widget(const Widget &) = delete;
+
+    Widget(Widget &&) = delete;
+
+    operator W *() {
+        return (W *)this;
     }
 
-    void callback(std::function<void()> &&cb) {
+    void callback(std::function<void(Widget *)> &&cb) {
         if (!cb)
             return;
-        auto shim = [](Fl_Widget *, void *data) {
+        auto shim = [](Fl_Widget *w, void *data) {
             if (!data)
                 return;
-            auto d = static_cast<std::function<void()> *>(data);
-            (*d)();
+            auto d = static_cast<std::function<void(Widget *)> *>(data);
+            (*d)((Widget *)w);
         };
-        callback_handle_ = std::make_unique<std::function<void()>>(cb);
-        Widget::callback(shim, static_cast<void *>(callback_handle_.get()));
+        callback_fn_ = cb;
+        W::callback(shim, (void *)&callback_fn_);
     }
 
     template <typename Message, typename = std::enable_if_t<std::is_pod_v<Message>>>
@@ -159,65 +134,103 @@ class widget final : public Widget {
         callback([&] { s.emit(m); });
     }
 
-    void handle(std::function<bool(int)> &&cb) {
-        if (!cb)
-            return;
-        auto shim = [](int _ev, void *data) -> int {
-            if (!data)
-                return 0;
-            auto d = static_cast<std::function<bool(int)> *>(data);
-            return (*d)(_ev);
-        };
-        set_handler_(shim);
-        handler_handle_ = std::make_unique<std::function<bool(int)>>(cb);
-        set_handler_data_(static_cast<void *>(handler_handle_.get()));
+    void handle(std::function<bool(Widget *, int)> &&cb) {
+        handler_fn_ = cb;
     }
 
-    void draw(std::function<void()> &&cb) {
-        if (!cb)
-            return;
-        auto shim = [](void *data) {
-            if (!data)
-                return 0;
-            auto d = static_cast<std::function<void()> *>(data);
-            (*d)();
-        };
-        set_drawer_(shim);
-        drawer_handle_ = std::make_unique<std::function<void()>>(cb);
-        set_drawer_data_(static_cast<void *>(drawer_handle_.get()));
+    void draw(std::function<void(Widget *)> &&cb) {
+        drawer_fn_ = cb;
     }
 
-    void add(const char *name, int shortcut, std::function<void()> &&cb, int flag) {
-        if constexpr (std::is_base_of_v<Fl_Menu_, Widget>) {
-            if (!cb)
-                return;
-            auto shim = [](Fl_Widget *, void *data) {
-                if (!data)
-                    return;
-                auto d = static_cast<std::function<void()> *>(data);
-                (*d)();
-            };
-            auto temp = new std::function<void()>(cb);
-            Widget::add(name, shortcut, shim, static_cast<void *>(temp), flag);
-        } else {
-            return;
+    void center_of(Fl_Widget *w) {
+        assert(
+            w->w() != 0 && w->h() != 0
+        );
+        double sw = this->w();
+        double sh = this->h();
+        double ww = w->w();
+        double wh = w->h();
+        auto sx = (ww - sw) / 2.0;
+        auto sy = (wh - sh) / 2.0;
+        auto wx = [=] { if (w->as_window()) { return 0; } else { return w->x(); }}();
+        auto wy = [=] { if (w->as_window()) { return 0; } else { return w->y(); }}();
+        this->resize(sx + wx, sy + wy, sw, sh);
+        this->redraw();
+    }
+
+    void center_of_parent() {
+        auto p = this->parent();
+        if (p) {
+            center_of(p);
         }
     }
 
-    void insert(int index, const char *name, int shortcut, std::function<void()> &&cb, int flag) {
-        if constexpr (std::is_base_of_v<Fl_Menu_, Widget>) {
-            if (!cb)
-                return;
-            auto shim = [](Fl_Widget *, void *data) {
-                if (!data)
-                    return;
-                auto d = static_cast<std::function<void()> *>(data);
-                (*d)();
-            };
-            auto temp = new std::function<void()>(cb);
-            Widget::insert(index, name, shortcut, shim, static_cast<void *>(temp), flag);
-        } else {
-            return;
+    void center_x(Fl_Widget *w) {
+        assert(
+            w->w() != 0 && w->h() != 0
+        );
+        double sw = this->w();
+        double sh = this->h();
+        double ww = w->w();
+        double wh = w->h();
+        auto sx = (ww - sw) / 2.0;
+        auto sy = this->y();
+        auto wx = [=] { if (w->as_window()) { return 0; } else { return w->x(); }}();
+        this->resize(sx + wx, sy, sw, sh);
+        this->redraw();
+    }
+
+    void center_y(Fl_Widget *w) {
+        assert(
+            w->w() != 0 && w->h() != 0
+        );
+        double sw = this->w();
+        double sh = this->h();
+        double ww = w->w();
+        double wh = w->h();
+        auto sx = this->x();
+        auto sy = (wh - sh) / 2.0;
+        auto wy = [=] { if (w->as_window()) { return 0; } else { return w->y(); }}();
+        this->resize(sx, sy + wy, sw, sh);
+        this->redraw();
+    }
+
+    void below_of(const Fl_Widget *wid, int padding) {
+        auto w = this->w();
+        auto h = this->h();
+        assert(w != 0 && h != 0);
+        this->resize(wid->x(), wid->y() + wid->h() + padding, w, h);
+    }
+
+    void above_of(const Fl_Widget *wid, int padding) {
+        auto w = this->w();
+        auto h = this->h();
+        assert(w != 0 && h != 0);
+        this->resize(wid->x(), wid->y() - padding - h, w, h);
+    }
+
+    void right_of(const Fl_Widget *wid, int padding) {
+        auto w = this->w();
+        auto h = this->h();
+        assert(w != 0 && h != 0);
+        this->resize(wid->x() + wid->w() + padding, wid->y(), w, h);
+    }
+
+    void left_of(const Fl_Widget *wid, int padding) {
+        auto w = this->w();
+        auto h = this->h();
+        assert(w != 0 && h != 0);
+        this->resize(wid->x() - w - padding, wid->y(), w, h);
+    }
+
+    void size_of(const Fl_Widget *wid) {
+        this->resize(this->x(), this->y(), wid->w(), wid->h());
+    }
+
+    void size_of_parent() {
+        auto p = this->parent();
+        if (p) {
+            size_of(p);
         }
     }
 };

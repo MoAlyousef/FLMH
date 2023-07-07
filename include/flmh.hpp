@@ -27,11 +27,11 @@
 
 #include <FL/Fl.H>
 #include <FL/Fl_Widget.H>
+#include <cassert>
 #include <functional>
 #include <optional>
 #include <type_traits>
 #include <utility>
-#include <cassert>
 
 namespace flmh {
 
@@ -67,7 +67,7 @@ auto channel() -> std::pair<Sender<T>, Receiver<T>> {
 
 template <typename W>
 class Widget final : public W {
-    static_assert(std::is_same_v<W, Fl_Widget>  ||  std::is_base_of_v<Fl_Widget, W>);
+    static_assert(std::is_same_v<W, Fl_Widget> || std::is_base_of_v<Fl_Widget, W>);
 
     std::function<void(Widget *)> callback_fn_ = nullptr;
 
@@ -95,8 +95,7 @@ class Widget final : public W {
     }
 
   public:
-    Widget(int x, int y, int w, int h, const char *title = 0) : W(x, y, w, h, title) {
-    }
+    Widget(int x, int y, int w, int h, const char *title = 0) : W(x, y, w, h, title) {}
     Widget(int w, int h, const char *title = 0) : W(0, 0, w, h, title) {
         if constexpr (std::is_same_v<W, Fl_Window> || std::is_base_of_v<Fl_Window, W>) {
             this->free_position();
@@ -112,9 +111,7 @@ class Widget final : public W {
 
     Widget(Widget &&) = delete;
 
-    operator W *() {
-        return (W *)this;
-    }
+    operator W *() { return (W *)this; }
 
     void callback(std::function<void(Widget *)> &&cb) {
         if (!cb)
@@ -134,26 +131,32 @@ class Widget final : public W {
         callback([&] { s.emit(m); });
     }
 
-    void handle(std::function<bool(Widget *, int)> &&cb) {
-        handler_fn_ = cb;
-    }
+    void handle(std::function<bool(Widget *, int)> &&cb) { handler_fn_ = cb; }
 
-    void draw(std::function<void(Widget *)> &&cb) {
-        drawer_fn_ = cb;
-    }
+    void draw(std::function<void(Widget *)> &&cb) { drawer_fn_ = cb; }
 
     void center_of(Fl_Widget *w) {
-        assert(
-            w->w() != 0 && w->h() != 0
-        );
+        assert(w->w() != 0 && w->h() != 0);
         double sw = this->w();
         double sh = this->h();
         double ww = w->w();
         double wh = w->h();
         auto sx = (ww - sw) / 2.0;
         auto sy = (wh - sh) / 2.0;
-        auto wx = [=] { if (w->as_window()) { return 0; } else { return w->x(); }}();
-        auto wy = [=] { if (w->as_window()) { return 0; } else { return w->y(); }}();
+        auto wx = [=] {
+            if (w->as_window()) {
+                return 0;
+            } else {
+                return w->x();
+            }
+        }();
+        auto wy = [=] {
+            if (w->as_window()) {
+                return 0;
+            } else {
+                return w->y();
+            }
+        }();
         this->resize(sx + wx, sy + wy, sw, sh);
         this->redraw();
     }
@@ -166,31 +169,39 @@ class Widget final : public W {
     }
 
     void center_x(Fl_Widget *w) {
-        assert(
-            w->w() != 0 && w->h() != 0
-        );
+        assert(w->w() != 0 && w->h() != 0);
         double sw = this->w();
         double sh = this->h();
         double ww = w->w();
         double wh = w->h();
         auto sx = (ww - sw) / 2.0;
         auto sy = this->y();
-        auto wx = [=] { if (w->as_window()) { return 0; } else { return w->x(); }}();
+        auto wx = [=] {
+            if (w->as_window()) {
+                return 0;
+            } else {
+                return w->x();
+            }
+        }();
         this->resize(sx + wx, sy, sw, sh);
         this->redraw();
     }
 
     void center_y(Fl_Widget *w) {
-        assert(
-            w->w() != 0 && w->h() != 0
-        );
+        assert(w->w() != 0 && w->h() != 0);
         double sw = this->w();
         double sh = this->h();
         double ww = w->w();
         double wh = w->h();
         auto sx = this->x();
         auto sy = (wh - sh) / 2.0;
-        auto wy = [=] { if (w->as_window()) { return 0; } else { return w->y(); }}();
+        auto wy = [=] {
+            if (w->as_window()) {
+                return 0;
+            } else {
+                return w->y();
+            }
+        }();
         this->resize(sx, sy + wy, sw, sh);
         this->redraw();
     }
@@ -223,9 +234,7 @@ class Widget final : public W {
         this->resize(wid->x() - w - padding, wid->y(), w, h);
     }
 
-    void size_of(const Fl_Widget *wid) {
-        this->resize(this->x(), this->y(), wid->w(), wid->h());
-    }
+    void size_of(const Fl_Widget *wid) { this->resize(this->x(), this->y(), wid->w(), wid->h()); }
 
     void size_of_parent() {
         auto p = this->parent();

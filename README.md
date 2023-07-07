@@ -2,7 +2,7 @@
 FLTK Modern Helper
 
 Just a tiny single-header library which provides a modern C++ interface for FLTK widgets where you can use lambdas for callbacks instead of function pointers, and it allows you to handle custom events and perform custom drawing without needing to derive/inherit the base class.
-It also provides several anchoring/positioning methods such as center_of, center_of_parent, ...etc.
+It also provides several anchoring/positioning methods such as center_of, center_of_parent, size_of, right_of...etc.
 
 ## Examples
 
@@ -19,13 +19,13 @@ It also provides several anchoring/positioning methods such as center_of, center
 using namespace flmh;
 
 int main() {
-    auto wind = new Widget<Fl_Window>(300, 200);
-    auto col = new Widget<Fl_Flex>(100, 100);
+    auto *wind = new Widget<Fl_Window>(300, 200);
+    auto *col = new Widget<Fl_Flex>(100, 100);
     col->type(Fl_Flex::COLUMN);
     col->center_of_parent();
-    auto frame = new Widget<Fl_Box>();
+    auto *frame = new Widget<Fl_Box>();
     frame->box(FL_DOWN_BOX);
-    auto but = new Widget<Fl_Button>("Click");
+    auto *but = new Widget<Fl_Button>("Click");
     col->fixed(but, 30);
     col->end();
     wind->end();
@@ -42,20 +42,20 @@ An example for custom handling:
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Window.H>
-#include <FL/names.H>
+#include <FL/names.h>
 
 #include "flmh.hpp"
 
 using namespace flmh;
 
 int main() {
-    auto wind = new Widget<Fl_Window>(400, 300, "Event names");
-    auto box = new Widget<Fl_Box>(200, 100);
+    auto *wind = new Widget<Fl_Window>(400, 300, "Event names");
+    auto *box = new Widget<Fl_Box>(200, 100);
     box->center_of(wind);
     box->box(FL_DOWN_BOX);
     wind->end();
     wind->show();
-    box->handle([](auto b, int event) -> bool {
+    box->handle([](auto *b, int event) -> bool {
         b->label(fl_eventnames[event]);
         return true;
     });
@@ -83,9 +83,9 @@ enum class Message {
 
 auto main() -> int {
     Fl::scheme("gtk+");
-    auto wind = new Widget<Fl_Window>(500, 400);
-    auto menu = new Widget<Fl_Menu_Bar>(500, 40);
-    auto box = new Widget<Fl_Box>(200, 100);
+    auto *wind = new Widget<Fl_Window>(500, 400);
+    auto *menu = new Widget<Fl_Menu_Bar>(500, 40);
+    auto *box = new Widget<Fl_Box>(200, 100);
     box->center_of_parent();
     box->box(FL_DOWN_BOX);
     wind->end();
@@ -98,7 +98,8 @@ auto main() -> int {
     menu->add("File/Open");
     menu->add("File/Quit");
 
-    menu->callback([=](auto m) {
+    // to avoid clangs: captured structured bindings are a C++20 extension
+    menu->callback([s = s](auto *m) {
         std::string name(250, '\0');
         if (m->item_pathname(name.data(), name.length()) == 0) {
             if (!name.find("File/New")) s.emit(Message::New);

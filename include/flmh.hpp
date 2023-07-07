@@ -47,8 +47,8 @@ struct Sender {
 template <typename T>
 struct Receiver {
     static_assert(std::is_standard_layout_v<T> && std::is_trivial_v<T>);
-    std::optional<T> recv() const {
-        auto msg = Fl::thread_message();
+    [[nodiscard]] std::optional<T> recv() const {
+        auto *msg = Fl::thread_message();
         if (!msg)
             return std::nullopt;
         auto val = *static_cast<T *>(msg);
@@ -95,21 +95,17 @@ class Widget final : public W {
     }
 
   public:
-    Widget(int x, int y, int w, int h, const char *title = 0) : W(x, y, w, h, title) {}
-    Widget(int w, int h, const char *title = 0) : W(0, 0, w, h, title) {
+    Widget(int x, int y, int w, int h, const char *title = nullptr) : W(x, y, w, h, title) {}
+    Widget(int w, int h, const char *title = nullptr) : W(0, 0, w, h, title) {
         if constexpr (std::is_same_v<W, Fl_Window> || std::is_base_of_v<Fl_Window, W>) {
             this->free_position();
         }
     }
-    Widget(const char *title = 0) : W(0, 0, 0, 0, title) {
+    Widget(const char *title = nullptr) : W(0, 0, 0, 0, title) {
         if constexpr (std::is_same_v<W, Fl_Window> || std::is_base_of_v<Fl_Window, W>) {
             this->free_position();
         }
     }
-
-    Widget(const Widget &) = delete;
-
-    Widget(Widget &&) = delete;
 
     operator W *() { return (W *)this; }
 

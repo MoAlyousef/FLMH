@@ -114,8 +114,7 @@ auto main() -> int {
 
     Fl::lock();
     while (Fl::wait()) {
-        auto msg = r.recv(); // returns a std::optional<T>
-        if (msg) {
+        if (auto msg = r.recv()) { // r.recv() returns a std::optional<T>
             switch (static_cast<Message>(msg.value())) {
             break; case Message::New:
                 box->label("New");

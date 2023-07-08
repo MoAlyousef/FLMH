@@ -73,6 +73,7 @@ An example using Fl_Menu_Bar and messaging:
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Window.H>
 
+#include <memory>
 #include <string>
 #include <string_view>
 
@@ -94,13 +95,15 @@ auto main() -> int {
     auto *col = make_widget<Fl_Flex>(500, 400);
     auto *menu = make_widget<Fl_Menu_Bar>();
     col->fixed(menu, 30);
-    auto *buf = new Fl_Text_Buffer;
+    auto buf = std::make_shared<Fl_Text_Buffer>();
     auto *ed = make_widget<Fl_Text_Editor>();
-    ed->buffer(buf);
+    ed->buffer(buf.get());
     col->end();
     wind->end();
     wind->show();
     wind->label(std::string("Hello World"));
+
+    auto [s, r] = channel<Message>();
 
     auto idx = 0;
     idx = menu->add("File/New");
@@ -113,8 +116,6 @@ auto main() -> int {
     idx = menu->add("Edit/Undo");
     menu->shortcut(idx, FL_CTRL | 'z');
 
-    auto [s, r] = channel<Message>();
-    
     // [s = s] to avoid clang's: captured structured bindings are a C++20 extension
     menu->callback([s = s](auto *m) {
         std::string name(250, '\0');

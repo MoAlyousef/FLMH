@@ -37,7 +37,6 @@ namespace flmh {
 
 template <typename T>
 struct Sender {
-    static_assert(std::is_standard_layout_v<T> && std::is_trivial_v<T>);
     void emit(const T &t) const {
         auto *temp = new T(t);
         Fl::awake(temp);
@@ -46,7 +45,6 @@ struct Sender {
 
 template <typename T>
 struct Receiver {
-    static_assert(std::is_standard_layout_v<T> && std::is_trivial_v<T>);
     [[nodiscard]] std::optional<T> recv() const {
         auto *msg = Fl::thread_message();
         if (!msg)
@@ -59,7 +57,6 @@ struct Receiver {
 
 template <typename T>
 auto channel() -> std::pair<Sender<T>, Receiver<T>> {
-    static_assert(std::is_standard_layout_v<T> && std::is_trivial_v<T>);
     Sender<T> s;
     Receiver<T> r;
     return std::make_pair(s, r);
@@ -121,13 +118,7 @@ class Widget final : public W {
         callback_fn_ = cb;
         W::callback(shim, (void *)&callback_fn_);
     }
-
-    // template <typename Message>
-    // void emit(const Sender<Message> &s, const Message &m) {
-    //     static_assert(std::is_standard_layout_v<Message> && std::is_trivial_v<Message>);
-    //     callback([=](auto) { s.emit(m); });
-    // }
-
+    
     void handle(std::function<bool(Widget *, int)> &&cb) { handler_fn_ = cb; }
 
     void draw(std::function<void(Widget *)> &&cb) { drawer_fn_ = cb; }

@@ -2,7 +2,9 @@
 FLTK Modern Helper
 
 Just a tiny single-header library which provides a modern C++ interface for FLTK widgets where you can use lambdas for callbacks instead of function pointers, and it allows you to handle custom events and perform custom drawing without needing to derive/inherit the base class.
-It also provides several anchoring/positioning methods such as center_of, center_of_parent, size_of, right_of...etc.
+It also provides:
+- Several anchoring/positioning methods such as center_of, center_of_parent, size_of, right_of...etc.
+- Channels, which return a sender and a receiver.
 
 ## Examples
 
@@ -93,7 +95,6 @@ auto main() -> int {
     wind->end();
     wind->show();
 
-    // Channels accept POD types
     auto [s, r] = channel<Message>();
 
     menu->add("File/New");

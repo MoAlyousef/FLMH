@@ -106,6 +106,10 @@ class Widget final : public W {
 
     operator W *() { return (W *)this; }
 
+    void label(const std::string &s) {
+        W::copy_label(s.c_str());
+    }
+
     void callback(std::function<void(Widget *)> &&cb) {
         if (!cb)
             return;

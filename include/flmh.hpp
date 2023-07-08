@@ -240,6 +240,11 @@ class Widget final : public W {
     }
 };
 
+template <typename W, typename ...Ts>
+auto make_widget(Ts ...ts) -> Widget<W> * {
+    return new Widget<W>(ts...);
+}
+
 } // namespace flmh
 
 #endif

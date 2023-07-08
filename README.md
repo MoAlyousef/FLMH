@@ -16,21 +16,21 @@ It also provides several anchoring/positioning methods such as center_of, center
 
 #include "flmh.hpp"
 
-using namespace flmh;
+using flmh::make_widget;
 
 int main() {
-    auto *wind = new Widget<Fl_Window>(300, 200);
-    auto *col = new Widget<Fl_Flex>(100, 100);
+    auto *wind = make_widget<Fl_Window>(300, 200);
+    auto *col = make_widget<Fl_Flex>(100, 100);
     col->type(Fl_Flex::COLUMN);
     col->center_of_parent();
-    auto *frame = new Widget<Fl_Box>();
-    frame->box(FL_DOWN_BOX);
-    auto *but = new Widget<Fl_Button>("Click");
+    auto *box = make_widget<Fl_Box>();
+    box->box(FL_DOWN_BOX);
+    auto *but = make_widget<Fl_Button>("Click");
     col->fixed(but, 30);
     col->end();
     wind->end();
     wind->show();
-    but->callback([=](auto) { frame->label("Works!"); });
+    but->callback([=](auto) { box->label("Works!"); });
     return Fl::run();
 }
 ```
@@ -46,11 +46,11 @@ An example for custom handling:
 
 #include "flmh.hpp"
 
-using namespace flmh;
+using flmh::make_widget;
 
 int main() {
-    auto *wind = new Widget<Fl_Window>(400, 300, "Event names");
-    auto *box = new Widget<Fl_Box>(200, 100);
+    auto *wind = make_widget<Fl_Window>(400, 300, "Event names");
+    auto *box = make_widget<Fl_Box>(200, 100);
     box->center_of(wind);
     box->box(FL_DOWN_BOX);
     wind->end();
@@ -73,7 +73,8 @@ An example using Fl_Menu_Bar and messaging:
 
 #include "flmh.hpp"
 
-using namespace flmh;
+using flmh::channel;
+using flmh::make_widget;
 
 enum class Message {
     New = 0,
@@ -83,9 +84,9 @@ enum class Message {
 
 auto main() -> int {
     Fl::scheme("gtk+");
-    auto *wind = new Widget<Fl_Window>(500, 400);
-    auto *menu = new Widget<Fl_Menu_Bar>(500, 40);
-    auto *box = new Widget<Fl_Box>(200, 100);
+    auto *wind = make_widget<Fl_Window>(500, 400);
+    auto *menu = make_widget<Fl_Menu_Bar>(500, 40);
+    auto *box = make_widget<Fl_Box>(200, 100);
     box->center_of_parent();
     box->box(FL_DOWN_BOX);
     wind->end();
@@ -93,8 +94,8 @@ auto main() -> int {
 
     // Channels accept POD types
     auto [s, r] = channel<Message>();
-    
-    menu->add("File/New"); 
+
+    menu->add("File/New");
     menu->add("File/Open");
     menu->add("File/Quit");
 
@@ -102,9 +103,12 @@ auto main() -> int {
     menu->callback([s = s](auto *m) {
         std::string name(250, '\0');
         if (m->item_pathname(name.data(), name.length()) == 0) {
-            if (!name.find("File/New")) s.emit(Message::New);
-            if (!name.find("File/Open")) s.emit(Message::Open);
-            if (!name.find("File/Quit")) s.emit(Message::Quit);
+            if (!name.find("File/New"))
+                s.emit(Message::New);
+            if (!name.find("File/Open"))
+                s.emit(Message::Open);
+            if (!name.find("File/Quit"))
+                s.emit(Message::Quit);
         }
     });
 

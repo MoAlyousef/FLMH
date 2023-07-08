@@ -67,9 +67,12 @@ An example using Fl_Menu_Bar and messaging:
 ```c++
 #include <FL/Enumerations.H>
 #include <FL/Fl.H>
-#include <FL/Fl_Box.H>
+#include <FL/Fl_Flex.H>
 #include <FL/Fl_Menu_Bar.H>
+#include <FL/Fl_Native_File_Chooser.H>
+#include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Window.H>
+
 #include <string>
 #include <string_view>
 
@@ -82,24 +85,36 @@ enum class Message {
     New,
     Open,
     Quit,
+    Undo,
 };
 
 auto main() -> int {
     Fl::scheme("gtk+");
     auto *wind = make_widget<Fl_Window>(500, 400);
-    auto *menu = make_widget<Fl_Menu_Bar>(500, 30);
-    auto *box = make_widget<Fl_Box>(200, 100);
-    box->center_of_parent();
-    box->box(FL_DOWN_BOX);
+    auto *col = make_widget<Fl_Flex>(500, 400);
+    auto *menu = make_widget<Fl_Menu_Bar>();
+    col->fixed(menu, 30);
+    auto *buf = new Fl_Text_Buffer;
+    auto *ed = make_widget<Fl_Text_Editor>();
+    ed->buffer(buf);
+    col->end();
     wind->end();
     wind->show();
+    wind->label(std::string("Hello World"));
+
+    auto idx = 0;
+    idx = menu->add("File/New");
+    menu->shortcut(idx, FL_CTRL | 'n');
+    idx = menu->add("File/Open");
+    menu->shortcut(idx, FL_CTRL | 'o');
+    menu->mode(idx, FL_MENU_DIVIDER);
+    idx = menu->add("File/Quit");
+    menu->shortcut(idx, FL_CTRL | 'q');
+    idx = menu->add("Edit/Undo");
+    menu->shortcut(idx, FL_CTRL | 'z');
 
     auto [s, r] = channel<Message>();
-
-    menu->add("File/New");
-    menu->add("File/Open");
-    menu->add("File/Quit");
-
+    
     // [s = s] to avoid clang's: captured structured bindings are a C++20 extension
     menu->callback([s = s](auto *m) {
         std::string name(250, '\0');
@@ -108,6 +123,7 @@ auto main() -> int {
             if (n == "File/New") s.emit(Message::New);
             if (n == "File/Open") s.emit(Message::Open);
             if (n == "File/Quit") s.emit(Message::Quit);
+            if (n == "Edit/Undo") s.emit(Message::Undo);
         }
     });
 
@@ -115,12 +131,18 @@ auto main() -> int {
     while (Fl::wait()) {
         if (auto msg = r.recv()) { // r.recv() returns a std::optional<T>
             switch (static_cast<Message>(msg.value())) {
-            break; case Message::New:
-                box->label("New");
-            break; case Message::Open:
-                box->label("Open");
-            break; case Message::Quit:
-                wind->hide();
+                break; case Message::New: buf->text("");
+                break; case Message::Open: {
+                    Fl_Native_File_Chooser dlg;
+                    dlg.title("Choose a file to open!");
+                    dlg.type(Fl_Native_File_Chooser::BROWSE_FILE);
+                    dlg.filter("*.txt\n");
+                    dlg.show();
+                    auto fname = dlg.filename();
+                    buf->loadfile(fname);
+                }
+                break; case Message::Quit: wind->hide();
+                break; case Message::Undo: Fl_Text_Editor::kf_undo(0, ed);
             }
         }
     }

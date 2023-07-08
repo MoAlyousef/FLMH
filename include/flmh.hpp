@@ -234,6 +234,7 @@ class Widget final : public W {
 
 template <typename W, typename... Ts>
 auto make_widget(Ts... ts) -> Widget<W> * {
+    // FLTK manages the lifetimes of its widgets
     return new Widget<W>(ts...);
 }
 

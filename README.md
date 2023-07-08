@@ -3,6 +3,7 @@ FLTK Modern Helper
 
 Just a tiny single-header library which provides a modern C++ interface for FLTK widgets where you can use lambdas for callbacks instead of function pointers, and it allows you to handle custom events and perform custom drawing without needing to derive/inherit the base class.
 It also provides:
+- Overloading of label and widget constructors to accept std::string.
 - Several anchoring/positioning methods such as center_of, center_of_parent, size_of, right_of...etc.
 - Channels, which return a sender and a receiver.
 
@@ -16,23 +17,32 @@ It also provides:
 #include <FL/Fl_Flex.H>
 #include <FL/Fl_Window.H>
 
+#include <memory>
+
 #include "flmh.hpp"
 
 using flmh::make_widget;
 
 int main() {
+    auto count = std::make_shared<int>(0);
+
     auto *wind = make_widget<Fl_Window>(300, 200);
     auto *col = make_widget<Fl_Flex>(100, 100);
     col->type(Fl_Flex::COLUMN);
     col->center_of_parent();
-    auto *box = make_widget<Fl_Box>();
+    auto *box = make_widget<Fl_Box>(std::to_string(*count));
     box->box(FL_DOWN_BOX);
     auto *but = make_widget<Fl_Button>("Click");
     col->fixed(but, 30);
     col->end();
     wind->end();
     wind->show();
-    but->callback([=](auto) { box->label("Works!"); });
+    
+    but->callback([=](auto) { 
+        *count += 1;
+        box->label(std::to_string(*count)); 
+    });
+    
     return Fl::run();
 }
 ```

@@ -30,6 +30,7 @@
 #include <cassert>
 #include <functional>
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -93,12 +94,32 @@ class Widget final : public W {
 
   public:
     Widget(int x, int y, int w, int h, const char *title = nullptr) : W(x, y, w, h, title) {}
+
     Widget(int w, int h, const char *title = nullptr) : W(0, 0, w, h, title) {
         if constexpr (std::is_same_v<W, Fl_Window> || std::is_base_of_v<Fl_Window, W>) {
             this->free_position();
         }
     }
+
     Widget(const char *title = nullptr) : W(0, 0, 0, 0, title) {
+        if constexpr (std::is_same_v<W, Fl_Window> || std::is_base_of_v<Fl_Window, W>) {
+            this->free_position();
+        }
+    }
+
+    Widget(int x, int y, int w, int h, const std::string &title) : W(x, y, w, h, nullptr) {
+        this->copy_label(title.c_str());
+    }
+
+    Widget(int w, int h, const std::string &title) : W(0, 0, w, h, nullptr) {
+        this->copy_label(title.c_str());
+        if constexpr (std::is_same_v<W, Fl_Window> || std::is_base_of_v<Fl_Window, W>) {
+            this->free_position();
+        }
+    }
+
+    Widget(const std::string &title) : W(0, 0, 0, 0, nullptr) {
+        this->copy_label(title.c_str());
         if constexpr (std::is_same_v<W, Fl_Window> || std::is_base_of_v<Fl_Window, W>) {
             this->free_position();
         }
@@ -239,7 +260,7 @@ class Widget final : public W {
 template <typename W, typename... Ts>
 auto make_widget(Ts... ts) -> Widget<W> * {
     // FLTK manages the lifetimes of its widgets
-    return new Widget<W>(ts...);
+    return new Widget<W>(std::forward<Ts>(ts)...);
 }
 
 } // namespace flmh

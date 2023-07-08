@@ -36,7 +36,6 @@ int main() {
     return Fl::run();
 }
 ```
-Note that FLTK manages the lifetimes of its widgets automatically, i.e. the Fl_Group inheriting widgets (here the Fl_Window) owns the widget and destroys them when it's destroyed.
 
 An example for custom handling:
 ```c++

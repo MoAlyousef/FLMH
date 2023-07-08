@@ -122,10 +122,11 @@ class Widget final : public W {
         W::callback(shim, (void *)&callback_fn_);
     }
 
-    template <typename Message, typename = std::enable_if_t<std::is_pod_v<Message>>>
-    void emit(const Sender<Message> &s, const Message &m) {
-        callback([&] { s.emit(m); });
-    }
+    // template <typename Message>
+    // void emit(const Sender<Message> &s, const Message &m) {
+    //     static_assert(std::is_standard_layout_v<Message> && std::is_trivial_v<Message>);
+    //     callback([=](auto) { s.emit(m); });
+    // }
 
     void handle(std::function<bool(Widget *, int)> &&cb) { handler_fn_ = cb; }
 
@@ -240,8 +241,8 @@ class Widget final : public W {
     }
 };
 
-template <typename W, typename ...Ts>
-auto make_widget(Ts ...ts) -> Widget<W> * {
+template <typename W, typename... Ts>
+auto make_widget(Ts... ts) -> Widget<W> * {
     return new Widget<W>(ts...);
 }
 

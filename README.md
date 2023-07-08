@@ -70,6 +70,7 @@ An example using Fl_Menu_Bar and messaging:
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Window.H>
 #include <string>
+#include <string_view>
 
 #include "flmh.hpp"
 
@@ -77,7 +78,7 @@ using flmh::channel;
 using flmh::make_widget;
 
 enum class Message {
-    New = 0,
+    New,
     Open,
     Quit,
 };
@@ -85,7 +86,7 @@ enum class Message {
 auto main() -> int {
     Fl::scheme("gtk+");
     auto *wind = make_widget<Fl_Window>(500, 400);
-    auto *menu = make_widget<Fl_Menu_Bar>(500, 40);
+    auto *menu = make_widget<Fl_Menu_Bar>(500, 30);
     auto *box = make_widget<Fl_Box>(200, 100);
     box->center_of_parent();
     box->box(FL_DOWN_BOX);
@@ -99,16 +100,14 @@ auto main() -> int {
     menu->add("File/Open");
     menu->add("File/Quit");
 
-    // to avoid clangs: captured structured bindings are a C++20 extension
+    // [s = s] to avoid clang's: captured structured bindings are a C++20 extension
     menu->callback([s = s](auto *m) {
         std::string name(250, '\0');
         if (m->item_pathname(name.data(), name.length()) == 0) {
-            if (!name.find("File/New"))
-                s.emit(Message::New);
-            if (!name.find("File/Open"))
-                s.emit(Message::Open);
-            if (!name.find("File/Quit"))
-                s.emit(Message::Quit);
+            auto n = std::string_view(&name[0], name.find('\0'));
+            if (n == "File/New") s.emit(Message::New);
+            if (n == "File/Open") s.emit(Message::Open);
+            if (n == "File/Quit") s.emit(Message::Quit);
         }
     });
 
@@ -116,18 +115,13 @@ auto main() -> int {
     while (Fl::wait()) {
         auto msg = r.recv(); // returns a std::optional<T>
         if (msg) {
-            switch (static_cast<int>(msg.value())) {
-            case 0:
+            switch (static_cast<Message>(msg.value())) {
+            break; case Message::New:
                 box->label("New");
-                break;
-            case 1:
+            break; case Message::Open:
                 box->label("Open");
-                break;
-            case 2:
+            break; case Message::Quit:
                 wind->hide();
-                break;
-            default:
-                break;
             }
         }
     }
